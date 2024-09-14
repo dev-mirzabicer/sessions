@@ -104,7 +104,6 @@
 		F30747C32C942DA600C8B97C = {
 			isa = PBXGroup;
 			children = (
-				F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */,
 				F30747CE2C942DA600C8B97C /* sessions */,
 				F30747E42C942DA900C8B97C /* sessionsTests */,
 				F30747EE2C942DA900C8B97C /* sessionsUITests */,
@@ -125,6 +124,7 @@
 		F30747CE2C942DA600C8B97C /* sessions */ = {
 			isa = PBXGroup;
 			children = (
+				F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */,
 				F307480E2C942F9800C8B97C /* Views */,
 				F307480A2C942F7700C8B97C /* Managers */,
 				F30748012C942F4200C8B97C /* Models */,
@@ -709,8 +709,7 @@
 				F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */,
 			);
 			currentVersion = F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */;
-			name = SessionsModel.xcdatamodeld;
-			path = /Users/mirzabicer/Documents/Projects/sessions/sessions/sessions/SessionsModel.xcdatamodeld;
+			path = SessionsModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
