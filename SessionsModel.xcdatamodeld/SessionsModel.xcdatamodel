@@ -1,0 +1,50 @@
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<entity name="FixedRoutineEntity" representedClassName="FixedRoutineEntity" syncable="YES" codeGenerationType="class">
+    <attribute name="cloudKitRecordID" optional="YES" attributeType="Binary"/>
+    <attribute name="flexibility" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    <attribute name="recurrence" optional="YES" attributeType="String"/>
+    <attribute name="routineDescription" optional="YES" attributeType="String"/>
+    <attribute name="startTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="title" optional="YES" attributeType="String"/>
+    <relationship name="tasks" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskEntity" inverseName="fixedRoutine" inverseEntity="TaskEntity"/>
+</entity>
+<entity name="HabitEntity" representedClassName="HabitEntity" syncable="YES" codeGenerationType="class">
+    <attribute name="cloudKitRecordID" optional="YES" attributeType="Binary"/>
+    <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="frequency" optional="YES" attributeType="String"/>
+    <attribute name="goal" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="goalProgress" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="habitDescription" optional="YES" attributeType="String"/>
+    <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    <attribute name="isScheduled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    <attribute name="notes" optional="YES" attributeType="String"/>
+    <attribute name="priority" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    <attribute name="project" optional="YES" attributeType="String"/>
+    <attribute name="reminder" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="scheduledDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="scheduledTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="specificDays" optional="YES" attributeType="String"/>
+    <attribute name="streak" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    <attribute name="streakFreezeAvailable" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    <attribute name="tags" optional="YES" attributeType="String"/>
+    <attribute name="title" optional="YES" attributeType="String"/>
+</entity>
+<entity name="TaskEntity" representedClassName="TaskEntity" syncable="YES" codeGenerationType="class">
+    <attribute name="cloudKitRecordID" optional="YES" attributeType="Binary"/>
+    <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    <attribute name="isScheduled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    <attribute name="priority" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    <attribute name="project" optional="YES" attributeType="String"/>
+    <attribute name="reminder" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="scheduledTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="status" optional="YES" attributeType="String"/>
+    <attribute name="tags" optional="YES" attributeType="String"/>
+    <attribute name="taskDescription" optional="YES" attributeType="String"/>
+    <attribute name="title" optional="YES" attributeType="String"/>
+    <relationship name="fixedRoutine" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FixedRoutineEntity" inverseName="tasks" inverseEntity="FixedRoutineEntity"/>
+</entity>
+</model>

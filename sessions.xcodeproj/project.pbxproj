@@ -8,14 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		F30747D02C942DA600C8B97C /* sessionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747CF2C942DA600C8B97C /* sessionsApp.swift */; };
-		F30747D22C942DA600C8B97C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747D12C942DA600C8B97C /* ContentView.swift */; };
 		F30747D42C942DA900C8B97C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F30747D32C942DA900C8B97C /* Assets.xcassets */; };
 		F30747D72C942DA900C8B97C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F30747D62C942DA900C8B97C /* Preview Assets.xcassets */; };
 		F30747D92C942DA900C8B97C /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747D82C942DA900C8B97C /* Persistence.swift */; };
-		F30747DC2C942DA900C8B97C /* sessions.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F30747DA2C942DA900C8B97C /* sessions.xcdatamodeld */; };
 		F30747E62C942DA900C8B97C /* sessionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747E52C942DA900C8B97C /* sessionsTests.swift */; };
 		F30747F02C942DA900C8B97C /* sessionsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747EF2C942DA900C8B97C /* sessionsUITests.swift */; };
 		F30747F22C942DA900C8B97C /* sessionsUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747F12C942DA900C8B97C /* sessionsUITestsLaunchTests.swift */; };
+		F30748002C942F3500C8B97C /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30747FF2C942F3500C8B97C /* DataManager.swift */; };
+		F30748032C942F5200C8B97C /* Scheduleable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748022C942F5200C8B97C /* Scheduleable.swift */; };
+		F30748052C942F5D00C8B97C /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748042C942F5D00C8B97C /* Task.swift */; };
+		F30748072C942F6600C8B97C /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748062C942F6600C8B97C /* Habit.swift */; };
+		F30748092C942F7100C8B97C /* FixedRoutine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748082C942F7100C8B97C /* FixedRoutine.swift */; };
+		F307480D2C942F8F00C8B97C /* RoutineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F307480C2C942F8F00C8B97C /* RoutineManager.swift */; };
+		F30748112C942FCC00C8B97C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748102C942FCC00C8B97C /* ContentView.swift */; };
+		F30748132C942FFA00C8B97C /* RoutineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748122C942FFA00C8B97C /* RoutineView.swift */; };
+		F30748162C94300A00C8B97C /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748152C94300A00C8B97C /* TasksView.swift */; };
+		F30748182C94301D00C8B97C /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748172C94301D00C8B97C /* HabitsView.swift */; };
+		F307481A2C94302A00C8B97C /* FixedRoutinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30748192C94302A00C8B97C /* FixedRoutinesView.swift */; };
+		F33655FD2C94366400C9FE04 /* GoogleAPIClientForRESTCore in Frameworks */ = {isa = PBXBuildFile; productRef = F33655FC2C94366400C9FE04 /* GoogleAPIClientForRESTCore */; };
+		F33655FF2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar in Frameworks */ = {isa = PBXBuildFile; productRef = F33655FE2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar */; };
+		F3907C862C9571E700AF904E /* BackgroundTaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907C852C9571E700AF904E /* BackgroundTaskService.swift */; };
+		F3907C982C957D0400AF904E /* SessionsModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,16 +51,27 @@
 /* Begin PBXFileReference section */
 		F30747CC2C942DA600C8B97C /* sessions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sessions.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F30747CF2C942DA600C8B97C /* sessionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sessionsApp.swift; sourceTree = "<group>"; };
-		F30747D12C942DA600C8B97C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F30747D32C942DA900C8B97C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F30747D62C942DA900C8B97C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F30747D82C942DA900C8B97C /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
-		F30747DB2C942DA900C8B97C /* sessions.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = sessions.xcdatamodel; sourceTree = "<group>"; };
 		F30747E12C942DA900C8B97C /* sessionsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = sessionsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F30747E52C942DA900C8B97C /* sessionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sessionsTests.swift; sourceTree = "<group>"; };
 		F30747EB2C942DA900C8B97C /* sessionsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = sessionsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F30747EF2C942DA900C8B97C /* sessionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sessionsUITests.swift; sourceTree = "<group>"; };
 		F30747F12C942DA900C8B97C /* sessionsUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sessionsUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		F30747FF2C942F3500C8B97C /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
+		F30748022C942F5200C8B97C /* Scheduleable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduleable.swift; sourceTree = "<group>"; };
+		F30748042C942F5D00C8B97C /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
+		F30748062C942F6600C8B97C /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
+		F30748082C942F7100C8B97C /* FixedRoutine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedRoutine.swift; sourceTree = "<group>"; };
+		F307480C2C942F8F00C8B97C /* RoutineManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineManager.swift; sourceTree = "<group>"; };
+		F30748102C942FCC00C8B97C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F30748122C942FFA00C8B97C /* RoutineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineView.swift; sourceTree = "<group>"; };
+		F30748152C94300A00C8B97C /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksView.swift; sourceTree = "<group>"; };
+		F30748172C94301D00C8B97C /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
+		F30748192C94302A00C8B97C /* FixedRoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedRoutinesView.swift; sourceTree = "<group>"; };
+		F3907C852C9571E700AF904E /* BackgroundTaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskService.swift; sourceTree = "<group>"; };
+		F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SessionsModel.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +79,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F33655FD2C94366400C9FE04 /* GoogleAPIClientForRESTCore in Frameworks */,
+				F33655FF2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +104,7 @@
 		F30747C32C942DA600C8B97C = {
 			isa = PBXGroup;
 			children = (
+				F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */,
 				F30747CE2C942DA600C8B97C /* sessions */,
 				F30747E42C942DA900C8B97C /* sessionsTests */,
 				F30747EE2C942DA900C8B97C /* sessionsUITests */,
@@ -98,11 +125,13 @@
 		F30747CE2C942DA600C8B97C /* sessions */ = {
 			isa = PBXGroup;
 			children = (
+				F307480E2C942F9800C8B97C /* Views */,
+				F307480A2C942F7700C8B97C /* Managers */,
+				F30748012C942F4200C8B97C /* Models */,
+				F30747FE2C942F2000C8B97C /* DataModel */,
 				F30747CF2C942DA600C8B97C /* sessionsApp.swift */,
-				F30747D12C942DA600C8B97C /* ContentView.swift */,
 				F30747D32C942DA900C8B97C /* Assets.xcassets */,
 				F30747D82C942DA900C8B97C /* Persistence.swift */,
-				F30747DA2C942DA900C8B97C /* sessions.xcdatamodeld */,
 				F30747D52C942DA900C8B97C /* Preview Content */,
 			);
 			path = sessions;
@@ -133,6 +162,46 @@
 			path = sessionsUITests;
 			sourceTree = "<group>";
 		};
+		F30747FE2C942F2000C8B97C /* DataModel */ = {
+			isa = PBXGroup;
+			children = (
+				F30747FF2C942F3500C8B97C /* DataManager.swift */,
+			);
+			path = DataModel;
+			sourceTree = "<group>";
+		};
+		F30748012C942F4200C8B97C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F30748022C942F5200C8B97C /* Scheduleable.swift */,
+				F30748042C942F5D00C8B97C /* Task.swift */,
+				F30748062C942F6600C8B97C /* Habit.swift */,
+				F30748082C942F7100C8B97C /* FixedRoutine.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F307480A2C942F7700C8B97C /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				F307480C2C942F8F00C8B97C /* RoutineManager.swift */,
+				F3907C852C9571E700AF904E /* BackgroundTaskService.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		F307480E2C942F9800C8B97C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F30748102C942FCC00C8B97C /* ContentView.swift */,
+				F30748122C942FFA00C8B97C /* RoutineView.swift */,
+				F30748152C94300A00C8B97C /* TasksView.swift */,
+				F30748172C94301D00C8B97C /* HabitsView.swift */,
+				F30748192C94302A00C8B97C /* FixedRoutinesView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -149,6 +218,10 @@
 			dependencies = (
 			);
 			name = sessions;
+			packageProductDependencies = (
+				F33655FC2C94366400C9FE04 /* GoogleAPIClientForRESTCore */,
+				F33655FE2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar */,
+			);
 			productName = sessions;
 			productReference = F30747CC2C942DA600C8B97C /* sessions.app */;
 			productType = "com.apple.product-type.application";
@@ -221,6 +294,9 @@
 				Base,
 			);
 			mainGroup = F30747C32C942DA600C8B97C;
+			packageReferences = (
+				F33655FB2C94366400C9FE04 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */,
+			);
 			productRefGroup = F30747CD2C942DA600C8B97C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -263,9 +339,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F30747DC2C942DA900C8B97C /* sessions.xcdatamodeld in Sources */,
+				F30748112C942FCC00C8B97C /* ContentView.swift in Sources */,
+				F30748002C942F3500C8B97C /* DataManager.swift in Sources */,
+				F307480D2C942F8F00C8B97C /* RoutineManager.swift in Sources */,
 				F30747D92C942DA900C8B97C /* Persistence.swift in Sources */,
-				F30747D22C942DA600C8B97C /* ContentView.swift in Sources */,
+				F30748092C942F7100C8B97C /* FixedRoutine.swift in Sources */,
+				F307481A2C94302A00C8B97C /* FixedRoutinesView.swift in Sources */,
+				F30748032C942F5200C8B97C /* Scheduleable.swift in Sources */,
+				F30748162C94300A00C8B97C /* TasksView.swift in Sources */,
+				F30748052C942F5D00C8B97C /* Task.swift in Sources */,
+				F3907C862C9571E700AF904E /* BackgroundTaskService.swift in Sources */,
+				F3907C982C957D0400AF904E /* SessionsModel.xcdatamodeld in Sources */,
+				F30748132C942FFA00C8B97C /* RoutineView.swift in Sources */,
+				F30748072C942F6600C8B97C /* Habit.swift in Sources */,
+				F30748182C94301D00C8B97C /* HabitsView.swift in Sources */,
 				F30747D02C942DA600C8B97C /* sessionsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -591,14 +678,39 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		F33655FB2C94366400C9FE04 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/google-api-objectivec-client-for-rest.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F33655FC2C94366400C9FE04 /* GoogleAPIClientForRESTCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F33655FB2C94366400C9FE04 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */;
+			productName = GoogleAPIClientForRESTCore;
+		};
+		F33655FE2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F33655FB2C94366400C9FE04 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */;
+			productName = GoogleAPIClientForREST_Calendar;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin XCVersionGroup section */
-		F30747DA2C942DA900C8B97C /* sessions.xcdatamodeld */ = {
+		F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				F30747DB2C942DA900C8B97C /* sessions.xcdatamodel */,
+				F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */,
 			);
-			currentVersion = F30747DB2C942DA900C8B97C /* sessions.xcdatamodel */;
-			path = sessions.xcdatamodeld;
+			currentVersion = F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */;
+			name = SessionsModel.xcdatamodeld;
+			path = /Users/mirzabicer/Documents/Projects/sessions/sessions/sessions/SessionsModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
