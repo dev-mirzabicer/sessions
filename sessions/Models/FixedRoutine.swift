@@ -1,8 +1,7 @@
 import Foundation
-import UIKit
 import Combine
 
-class FixedRoutine: Codable {
+class FixedRoutine: Codable, ObservableObject {
     var id: UUID
     var title: String
     var description: String?
@@ -14,12 +13,14 @@ class FixedRoutine: Codable {
     var startTime: Date?
     var flexibility: TimeInterval?
     var cloudKitRecordID: CKRecord.ID?
+    var specificDays: [Int]? // Add specificDays property
 
-    private var currentTaskIndex: Int = 0
-    private var timer: AnyCancellable?
+    @Published private(set) var currentTaskIndex: Int = 0
+    @Published private(set) var elapsedTime: TimeInterval = 0
+    @Published private(set) var remainingTime: TimeInterval = 0
+
     private var cancellables = Set<AnyCancellable>()
-    private var elapsedTime: TimeInterval = 0
-    private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
+    private var timer: AnyCancellable?
 
     enum Recurrence: String, CaseIterable, Codable {
         case daily = "Daily"
@@ -49,11 +50,20 @@ class FixedRoutine: Codable {
             self.saveRoutineProgress()
         }
 
+        remainingTime = currentTask.duration ?? 0
+
         timer = Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
-                self?.tick()
+                guard let self = self else { return }
+                self.elapsedTime += 1
+                self.remainingTime -= 1
+
+                if self.elapsedTime >= (currentTask.duration ?? 0) {
+                    self.nextTask()
+                }
             }
+            .store(in: &cancellables) // Store the timer in the cancellables set
     }
 
     func pauseRoutine() {
@@ -61,6 +71,14 @@ class FixedRoutine: Codable {
         timer = nil
 
         // End background task using BackgroundTaskService
+        BackgroundTaskService.shared.endBackgroundTask()
+    }
+
+
+    func pauseRoutine() {
+        timer?.cancel()
+        timer = nil
+
         BackgroundTaskService.shared.endBackgroundTask()
     }
 

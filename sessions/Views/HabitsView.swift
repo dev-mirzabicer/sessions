@@ -3,16 +3,14 @@ import SwiftUI
 struct HabitsView: View {
     @ObservedObject var routineManager = RoutineManager.shared
     @State private var isAddingHabit = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
             VStack {
                 List {
-                    ForEach(routineManager.habits) { habit in
-                        NavigationLink(destination: HabitDetailView(habit: habit)) {
-                            HabitRowView(habit: habit)
+                    ForEach($routineManager.habits) { $habit in
+                        NavigationLink(destination: HabitDetailView(habit: $habit)) {
+                            HabitRowView(habit: $habit)
                         }
                     }
                     .onDelete(perform: deleteHabit)
@@ -30,10 +28,10 @@ struct HabitsView: View {
             }
             .navigationTitle("Habits")
             .sheet(isPresented: $isAddingHabit) {
-                AddHabitView(isPresented: $isAddingHabit, habits: $routineManager.habits)
+                AddHabitView(isPresented: $isAddingHabit)
             }
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
             }
             .onAppear {
                 routineManager.loadHabits()
@@ -46,25 +44,22 @@ struct HabitsView: View {
             let habitToDelete = routineManager.habits[index]
             routineManager.habits.remove(at: index)
             do {
-                try routineManager.dataManager.deleteScheduleable(scheduleable: habitToDelete)
+                try routineManager.dataManager.deleteHabit(habitToDelete)
             } catch {
-                alertMessage = "Error deleting habit: \(error.localizedDescription)"
-                showingAlert = true
+                routineManager.dataManager.error = error
             }
         }
     }
 }
 
 struct HabitRowView: View {
-    @ObservedObject var habit: Habit
+    @Binding var habit: HabitEntity
     @ObservedObject var routineManager = RoutineManager.shared
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(habit.title)
+                Text(habit.title ?? "")
                     .font(.headline)
                 if let time = habit.scheduledTime {
                     Text("\(time, style: .time)")
@@ -87,21 +82,63 @@ struct HabitRowView: View {
                     .foregroundColor(.green)
             }
         }
-        .alert(isPresented: $showingAlert) {
-            Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
-        }
     }
 
     func markHabitAsComplete() {
-        habit.markAsComplete(on: Date())
-        if let index = routineManager.habits.firstIndex(where: { $0.id == habit.id }) {
-            routineManager.habits[index] = habit
+        habit.streak += 1
+        habit.streakFreezeAvailable = true
+        if let goal = habit.goal {
+            habit.goalProgress += 1
+            if habit.goalProgress > goal.doubleValue {
+                habit.goalProgress = goal.doubleValue // Prevent progress from exceeding the goal
+            }
         }
+        habit.scheduledDate = Date() // Update the last completion date
+
+        // Schedule next occurrence based on frequency
+        scheduleNextOccurrence(from: Date())
+
         do {
-            try routineManager.dataManager.saveHabit(habit: habit)
+            try routineManager.dataManager.saveContext()
         } catch {
-            alertMessage = "Error saving habit: \(error.localizedDescription)"
-            showingAlert = true
+            routineManager.dataManager.error = error
+        }
+    }
+
+    private func scheduleNextOccurrence(from date: Date) {
+        guard let scheduledTime = habit.scheduledTime else { return }
+
+        switch habit.frequency {
+        case "Daily":
+            if let nextDate = Calendar.current.date(byAdding: .day, value: 1, to: date) {
+                habit.scheduledDate = nextDate
+                habit.scheduledTime = scheduledTime
+            }
+        case "Weekly":
+            if let nextDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: date) {
+                habit.scheduledDate = nextDate
+                habit.scheduledTime = scheduledTime
+            }
+        case "Specific Days":
+            let calendar = Calendar.current
+            let todayWeekday = calendar.component(.weekday, from: date)
+            let specificDays = habit.specificDays?.components(separatedBy: ",").compactMap { Int($0) } ?? []
+
+            guard !specificDays.isEmpty else { return }
+
+            var nextWeekday = specificDays.first(where: { $0 > todayWeekday })
+            if nextWeekday == nil {
+                nextWeekday = specificDays.first
+            }
+
+            let daysToAdd = (nextWeekday! - todayWeekday + 7) % 7
+
+            if let nextDate = calendar.current.date(byAdding: .day, value: daysToAdd, to: date) {
+                habit.scheduledDate = nextDate
+                habit.scheduledTime = scheduledTime
+            }
+        default:
+            break
         }
     }
 }
@@ -109,7 +146,6 @@ struct HabitRowView: View {
 struct AddHabitView: View {
     @Environment(\.presentationMode) var presentationMode
     @Binding var isPresented: Bool
-    @Binding var habits: [Habit]
     @State private var title = ""
     @State private var description: String?
     @State private var scheduledTime = Date()
@@ -121,8 +157,6 @@ struct AddHabitView: View {
     @State private var frequency: Habit.HabitFrequency = .daily
     @State private var specificDays: [Int] = []
     @ObservedObject var routineManager = RoutineManager.shared
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
@@ -134,11 +168,6 @@ struct AddHabitView: View {
                 Stepper("Priority: \(priority)", value: $priority, in: 1...3)
                 DatePicker("Reminder (Optional)", selection: $reminder, displayedComponents: [.date, .hourAndMinute])
                 TextField("Tags (comma-separated)", text: .constant(tags.joined(separator: ",")))
-                    .onAppear {
-                        if let existingHabit = habits.first(where: { $0.title == title }) {
-                            tags = existingHabit.tags ?? []
-                        }
-                    }
                     .onDisappear {
                         tags = $0.wrappedValue.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                     }
@@ -162,28 +191,25 @@ struct AddHabitView: View {
                 }
             }
             .navigationTitle("Add Habit")
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
             }
         }
     }
 
     func addHabit() {
         guard !title.isEmpty else {
-            alertMessage = "Please enter a title for the habit."
-            showingAlert = true
+            routineManager.dataManager.error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please enter a title for the habit."])
             return
         }
 
-        let newHabit = Habit(title: title, description: description, isScheduled: true, scheduledDate: Date(), scheduledTime: scheduledTime, duration: duration, priority: priority, reminder: reminder, tags: tags, project: project, frequency: frequency)
-        newHabit.specificDays = specificDays
-        habits.append(newHabit)
         do {
-            try routineManager.dataManager.saveHabit(habit: newHabit)
+            try routineManager.dataManager.saveHabit(title: title, description: description, isScheduled: true, scheduledDate: Date(), scheduledTime: scheduledTime, duration: duration, priority: priority, dueDate: nil, reminder: reminder, tags: tags, project: project, frequency: frequency, streak: 0, streakFreezeAvailable: true, goal: nil, goalProgress: 0.0, notes: nil, specificDays: specificDays)
+            routineManager.loadHabits()
         } catch {
-            alertMessage = "Error saving habit: \(error.localizedDescription)"
-            showingAlert = true
+            routineManager.dataManager.error = error
         }
+
         presentationMode.wrappedValue.dismiss()
     }
 }

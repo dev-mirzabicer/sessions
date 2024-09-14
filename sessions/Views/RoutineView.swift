@@ -4,9 +4,6 @@ struct RoutineView: View {
     @ObservedObject var routineManager = RoutineManager.shared
     @State private var selectedDate = Date()
     @State private var isAddingNewItem = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
-    @State private var alertTitle = ""
 
     var body: some View {
         NavigationView {
@@ -42,56 +39,57 @@ struct RoutineView: View {
                 .padding()
             }
             .navigationTitle("My Routine")
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button(action: {
-                                    routineManager.syncWithGoogleCalendar()
-                                }) {
-                                    Image(systemName: "arrow.clockwise")
-                                }
-                            }
-                        }
-                        .sheet(isPresented: $isAddingNewItem) {
-                            AddNewItemView(isPresented: $isAddingNewItem, selectedDate: $selectedDate)
-                        }
-                        .alert(isPresented: $showingAlert) {
-                            Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
-                        }
-                    }
-                    .onAppear {
-                        routineManager.loadRoutine(for: selectedDate)
-                    }
-                    .onReceive(routineManager.dataManager.$error) { error in
-                        if let error = error {
-                            self.alertTitle = "Error"
-                            self.alertMessage = error.localizedDescription
-                            self.showingAlert = true
-                        }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        routineManager.syncWithGoogleCalendar()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
                     }
                 }
+            }
+            .sheet(isPresented: $isAddingNewItem) {
+                AddNewItemView(isPresented: $isAddingNewItem, selectedDate: $selectedDate)
+            }
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
+            }
+        }
+        .onAppear {
+            routineManager.loadRoutine(for: selectedDate)
+        }
+    }
 
     func deleteRoutineItem(at offsets: IndexSet) {
-            if let index = offsets.first {
-                let itemToDelete = routineManager.getRoutineItems(for: selectedDate)[index]
+        if let index = offsets.first {
+            let itemToDelete = routineManager.getRoutineItems(for: selectedDate)[index]
 
-                if let scheduleableIndex = routineManager.scheduledItems.firstIndex(where: { $0.id == itemToDelete.id }) {
-                    routineManager.scheduledItems.remove(at: scheduleableIndex)
-                }
+            if let scheduleableIndex = routineManager.scheduledItems.firstIndex(where: { $0.id == itemToDelete.id }) {
+                routineManager.scheduledItems.remove(at: scheduleableIndex)
+            }
 
+            if let task = itemToDelete as? TaskEntity {
                 do {
-                    if let task = itemToDelete as? Task {
-                        try routineManager.dataManager.deleteScheduleable(scheduleable: task)
-                    } else if let habit = itemToDelete as? Habit {
-                        try routineManager.dataManager.deleteScheduleable(scheduleable: habit)
-                    }
+                    try routineManager.dataManager.deleteTask(task)
                 } catch {
-                    alertTitle = "Error Deleting Item"
-                    alertMessage = error.localizedDescription
-                    showingAlert = true
+                    routineManager.dataManager.error = error
+                }
+            } else if let habit = itemToDelete as? HabitEntity {
+                do {
+                    try routineManager.dataManager.deleteHabit(habit)
+                } catch {
+                    routineManager.dataManager.error = error
+                }
+            } else if let fixedRoutine = itemToDelete as? FixedRoutineEntity {
+                do {
+                    try routineManager.dataManager.deleteFixedRoutine(fixedRoutine)
+                } catch {
+                    routineManager.dataManager.error = error
                 }
             }
         }
     }
+}
 
 struct RoutineItemView: View {
     var item: Scheduleable
@@ -139,8 +137,7 @@ struct AddNewItemView: View {
     @State private var project: String?
     @State private var frequency: Habit.HabitFrequency = .daily
     @State private var specificDays: [Int] = []
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
+    @State private var navigateToFixedRoutine = false // State to control NavigationLink
 
     var body: some View {
         NavigationView {
@@ -207,10 +204,15 @@ struct AddNewItemView: View {
                 }) {
                     Text("Cancel")
                 }
+
+                // NavigationLink for FixedRoutine creation
+                NavigationLink(destination: CreateFixedRoutineView(isPresented: $isPresented), isActive: $navigateToFixedRoutine) {
+                    EmptyView()
+                }
             }
             .navigationTitle(selectedItemType == 0 ? "Add Task" : (selectedItemType == 1 ? "Add Habit" : "Add Fixed Routine"))
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.error.localizedDescription), dismissButton: .default(Text("OK")))
             }
         }
     }
@@ -223,11 +225,9 @@ struct AddNewItemView: View {
                 try routineManager.scheduleItem(item: newTask, date: selectedDate, time: scheduledTime)
                 presentationMode.wrappedValue.dismiss()
             } catch RoutineManager.RoutineManagerError.schedulingConflict(let conflictingItem) {
-                alertMessage = "Scheduling conflict with \(conflictingItem.title)."
-                showingAlert = true
+                routineManager.dataManager.error = IdentifiableError(error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Scheduling conflict with \(conflictingItem.title)."]))
             } catch {
-                alertMessage = "Error saving task: \(error.localizedDescription)"
-                showingAlert = true
+                routineManager.dataManager.error = IdentifiableError(error: error)
             }
         case 1: // Habit
             let newHabit = Habit(title: title, description: description, isScheduled: true, scheduledDate: selectedDate, scheduledTime: scheduledTime, duration: duration, priority: priority, reminder: reminder, tags: tags, project: project, frequency: frequency)
@@ -236,18 +236,12 @@ struct AddNewItemView: View {
                 try routineManager.scheduleItem(item: newHabit, date: selectedDate, time: scheduledTime)
                 presentationMode.wrappedValue.dismiss()
             } catch RoutineManager.RoutineManagerError.schedulingConflict(let conflictingItem) {
-                alertMessage = "Scheduling conflict with \(conflictingItem.title)."
-                showingAlert = true
+                routineManager.dataManager.error = IdentifiableError(error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Scheduling conflict with \(conflictingItem.title)."]))
             } catch {
-                alertMessage = "Error saving habit: \(error.localizedDescription)"
-                showingAlert = true
+                routineManager.dataManager.error = IdentifiableError(error: error)
             }
         case 2: // FixedRoutine
-            // Handle FixedRoutine creation (requires navigating to a separate view to add tasks to the routine)
-            NavigationLink(destination: CreateFixedRoutineView(isPresented: $isPresented, selectedDate: $selectedDate)) {
-                Text("Create Fixed Routine")
-            }
-            break
+            navigateToFixedRoutine = true // Activate the NavigationLink
         default:
             break
         }

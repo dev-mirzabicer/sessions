@@ -3,15 +3,13 @@ import SwiftUI
 struct FixedRoutinesView: View {
     @ObservedObject var routineManager = RoutineManager.shared
     @State private var isAddingRoutine = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
             VStack {
                 List {
-                    ForEach(routineManager.fixedRoutines) { routine in
-                        NavigationLink(destination: FixedRoutineDetailView(routine: routine)) {
+                    ForEach($routineManager.fixedRoutines) { $routine in
+                        NavigationLink(destination: FixedRoutineDetailView(routine: $routine)) {
                             FixedRoutineRowView(routine: routine)
                         }
                     }
@@ -32,8 +30,8 @@ struct FixedRoutinesView: View {
             .sheet(isPresented: $isAddingRoutine) {
                 CreateFixedRoutineView(isPresented: $isAddingRoutine)
             }
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
             }
             .onAppear {
                 routineManager.loadFixedRoutines()
@@ -46,22 +44,21 @@ struct FixedRoutinesView: View {
             let routineToDelete = routineManager.fixedRoutines[index]
             routineManager.fixedRoutines.remove(at: index)
             do {
-                try routineManager.dataManager.deleteScheduleable(scheduleable: routineToDelete)
+                try routineManager.dataManager.deleteFixedRoutine(routineToDelete)
             } catch {
-                alertMessage = "Error deleting fixed routine: \(error.localizedDescription)"
-                showingAlert = true
+                routineManager.dataManager.error = error
             }
         }
     }
 }
 
 struct FixedRoutineRowView: View {
-    var routine: FixedRoutine
+    @ObservedObject var routine: FixedRoutineEntity
 
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(routine.title)
+                Text(routine.title ?? "")
                     .font(.headline)
                 if let startTime = routine.startTime {
                     Text("\(startTime, style: .time)")
@@ -74,27 +71,27 @@ struct FixedRoutineRowView: View {
 }
 
 struct FixedRoutineDetailView: View {
-    @ObservedObject var routine: FixedRoutine
+    @Binding var routine: FixedRoutineEntity
     @State private var isEditing = false
     @State private var isRunning = false
     @State private var progress: Double = 0.0
     @State private var remainingTime: TimeInterval = 0
-    private var timer: Timer?
+    @State private var timer: Timer? // Use @State for the timer
 
     var body: some View {
         VStack {
             List {
                 Section(header: Text("Details")) {
-                    DetailRow(label: "Description", value: routine.description ?? "-")
+                    DetailRow(label: "Description", value: routine.routineDescription ?? "-")
                     DetailRow(label: "Start Time", value: routine.startTime != nil ? "\(routine.startTime!, style: .time)" : "-")
-                    DetailRow(label: "Flexibility", value: routine.flexibility != nil ? "\(Int(routine.flexibility! / 60)) minutes" : "-")
-                    DetailRow(label: "Recurrence", value: routine.recurrence.rawValue)
+                    DetailRow(label: "Flexibility", value: routine.flexibility != nil ? "\(Int(routine.flexibility!.doubleValue / 60)) minutes" : "-")
+                    DetailRow(label: "Recurrence", value: routine.recurrence ?? "-")
                 }
 
                 Section(header: Text("Tasks")) {
-                    ForEach(routine.tasks) { task in
+                    ForEach(routine.tasks?.allObjects as? [TaskEntity] ?? []) { task in
                         NavigationLink(destination: TaskDetailView(task: task)) {
-                            Text(task.title)
+                            Text(task.title ?? "")
                         }
                     }
                 }
@@ -134,7 +131,7 @@ struct FixedRoutineDetailView: View {
                 .padding()
             }
         }
-        .navigationTitle(routine.title)
+        .navigationTitle(routine.title ?? "")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
@@ -145,37 +142,47 @@ struct FixedRoutineDetailView: View {
             }
         }
         .sheet(isPresented: $isEditing) {
-            EditFixedRoutineView(routine: routine, isPresented: $isEditing)
+            EditFixedRoutineView(routine: $routine, isPresented: $isEditing)
         }
         .onAppear {
-            routine.loadRoutineProgress()
-            if routine.getCurrentTask() != nil {
+            loadRoutineProgress()
+            if routine.tasks?.count ?? 0 > 0 {
                 isRunning = true
                 startTimer()
             }
         }
         .onDisappear {
-            stopTimer() // Stop the timer when the view disappears
+            stopTimer() // Invalidate the timer when the view disappears
         }
     }
 
     private func startRoutine() {
-        routine.startRoutine()
+        // Convert the FixedRoutineEntity to a FixedRoutine for timer management
+        var fixedRoutine = routine.toFixedRoutine()
+        fixedRoutine.startRoutine()
+
+        // Update the isRunning state and start the timer
         isRunning = true
         startTimer()
     }
 
     private func stopRoutine() {
-        routine.pauseRoutine()
+        // Convert the FixedRoutineEntity to a FixedRoutine for timer management
+        var fixedRoutine = routine.toFixedRoutine()
+        fixedRoutine.pauseRoutine()
+
+        // Update the isRunning state and stop the timer
         isRunning = false
         stopTimer()
     }
 
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if let currentTask = routine.getCurrentTask() {
-                remainingTime = (currentTask.duration ?? 0) - routine.elapsedTime
-                progress = routine.getProgress()
+            // Convert the FixedRoutineEntity to a FixedRoutine to get progress and remaining time
+            let fixedRoutine = routine.toFixedRoutine()
+            if let currentTask = fixedRoutine.getCurrentTask() {
+                remainingTime = (currentTask.duration ?? 0) - fixedRoutine.elapsedTime
+                progress = fixedRoutine.getProgress()
             } else {
                 stopRoutine()
             }
@@ -185,6 +192,18 @@ struct FixedRoutineDetailView: View {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+    }
+
+    private func loadRoutineProgress() {
+        // Convert the FixedRoutineEntity to a FixedRoutine to load progress
+        var fixedRoutine = routine.toFixedRoutine()
+        fixedRoutine.loadRoutineProgress()
+
+        // Update the progress and remaining time based on the loaded progress
+        progress = fixedRoutine.getProgress()
+        if let currentTask = fixedRoutine.getCurrentTask() {
+            remainingTime = (currentTask.duration ?? 0) - fixedRoutine.elapsedTime
+        }
     }
 
     private var formattedRemainingTime: String {
@@ -203,10 +222,8 @@ struct CreateFixedRoutineView: View {
     @State private var routineStartTime = Date()
     @State private var routineFlexibility: TimeInterval?
     @State private var recurrence: FixedRoutine.Recurrence = .daily
-    @State private var tasks: [Task] = []
+    @State private var selectedTaskIDs: [UUID] = []
     @State private var isAddingTask = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
@@ -224,10 +241,25 @@ struct CreateFixedRoutineView: View {
                 }
 
                 Section(header: Text("Tasks")) {
-                    ForEach(tasks) { task in
-                        Text(task.title)
+                    ForEach(routineManager.tasks) { task in
+                        Button(action: {
+                            if selectedTaskIDs.contains(task.id!) {
+                                selectedTaskIDs.removeAll(where: { $0 == task.id! })
+                            } else {
+                                selectedTaskIDs.append(task.id!)
+                            }
+                        }) {
+                            HStack {
+                                Text(task.title ?? "")
+                                Spacer()
+                                if selectedTaskIDs.contains(task.id!) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                } else {
+                                    Image(systemName: "circle")
+                                }
+                            }
+                        }
                     }
-                    .onDelete(perform: deleteTask)
 
                     Button(action: {
                         isAddingTask = true
@@ -247,66 +279,51 @@ struct CreateFixedRoutineView: View {
             }
             .navigationTitle("Create Fixed Routine")
             .sheet(isPresented: $isAddingTask) {
-                AddTaskView(isPresented: $isAddingTask, tasks: $tasks)
+                AddTaskView(isPresented: $isAddingTask)
             }
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
+            }
+            .onAppear {
+                routineManager.loadTasks()
             }
         }
-    }
-
-    func deleteTask(at offsets: IndexSet) {
-        tasks.remove(atOffsets: offsets)
     }
 
     func saveFixedRoutine() {
         guard !routineTitle.isEmpty else {
-            alertMessage = "Please enter a title for the routine."
-            showingAlert = true
+            routineManager.dataManager.error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please enter a title for the routine."])
             return
         }
 
-        guard !tasks.isEmpty else {
-            alertMessage = "Please add at least one task to the routine."
-            showingAlert = true
-            return
-        }
-
-        let newFixedRoutine = FixedRoutine(title: routineTitle,
-                                          description: routineDescription,
-                                          tasks: tasks,
-                                          recurrence: recurrence,
-                                          startTime: routineStartTime,
-                                          flexibility: routineFlexibility)
+        let selectedTasks = routineManager.tasks.filter { selectedTaskIDs.contains($0.id!) }
 
         do {
-            try routineManager.dataManager.saveFixedRoutine(fixedRoutine: newFixedRoutine)
-            routineManager.fixedRoutines.append(newFixedRoutine)
+            try routineManager.dataManager.saveFixedRoutine(title: routineTitle, description: routineDescription, startTime: routineStartTime, flexibility: routineFlexibility, recurrence: recurrence, tasks: selectedTasks)
+            routineManager.loadFixedRoutines()
             presentationMode.wrappedValue.dismiss()
             isPresented = false
         } catch {
-            alertMessage = "Error saving fixed routine: \(error.localizedDescription)"
-            showingAlert = true
+            routineManager.dataManager.error = error
         }
     }
 }
 
 struct EditFixedRoutineView: View {
     @Environment(\.presentationMode) var presentationMode
-    @ObservedObject var routine: FixedRoutine
+    @Binding var routine: FixedRoutineEntity
     @Binding var isPresented: Bool
     @ObservedObject var routineManager = RoutineManager.shared
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
+    @State private var selectedTaskIDs: [UUID] = []
 
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Routine Details")) {
                     TextField("Title", text: $routine.title)
-                    TextField("Description (Optional)", text: $routine.description)
+                    TextField("Description (Optional)", text: $routine.routineDescription)
                     DatePicker("Start Time", selection: $routine.startTime ?? Date(), displayedComponents: [.hourAndMinute])
-                    Stepper("Flexibility (minutes): \(Int(routine.flexibility ?? 0) / 60)", value: $routine.flexibility, in: 0...600, step: 5)
+                    Stepper("Flexibility (minutes): \(Int(routine.flexibility?.doubleValue ?? 0) / 60)", value: $routine.flexibility, in: 0...600, step: 5)
                     Picker("Recurrence", selection: $routine.recurrence) {
                         ForEach(FixedRoutine.Recurrence.allCases, id: \.self) { recurrence in
                             Text(recurrence.rawValue).tag(recurrence)
@@ -315,15 +332,23 @@ struct EditFixedRoutineView: View {
                 }
 
                 Section(header: Text("Tasks")) {
-                    ForEach(routine.tasks) { task in
-                        Text(task.title)
-                    }
-                    .onDelete(perform: deleteTask)
-
-                    NavigationLink(destination: AddTaskView(isPresented: .constant(false), tasks: $routine.tasks)) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Task")
+                    ForEach(routineManager.tasks) { task in
+                        Button(action: {
+                            if selectedTaskIDs.contains(task.id!) {
+                                selectedTaskIDs.removeAll(where: { $0 == task.id! })
+                            } else {
+                                selectedTaskIDs.append(task.id!)
+                            }
+                        }) {
+                            HStack {
+                                Text(task.title ?? "")
+                                Spacer()
+                                if selectedTaskIDs.contains(task.id!) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                } else {
+                                    Image(systemName: "circle")
+                                }
+                            }
                         }
                     }
                 }
@@ -335,38 +360,30 @@ struct EditFixedRoutineView: View {
                 }
             }
             .navigationTitle("Edit Fixed Routine")
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.localizedDescription), dismissButton: .default(Text("OK")))
+            }
+            .onAppear {
+                routineManager.loadTasks()
+                selectedTaskIDs = routine.tasks?.allObjects.compactMap { ($0 as? TaskEntity)?.id } ?? []
             }
         }
-    }
-
-    func deleteTask(at offsets: IndexSet) {
-        routine.tasks.remove(atOffsets: offsets)
     }
 
     func saveFixedRoutine() {
-        guard !routine.title.isEmpty else {
-            alertMessage = "Please enter a title for the routine."
-            showingAlert = true
+        guard let routineTitle = routine.title, !routineTitle.isEmpty else {
+            routineManager.dataManager.error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please enter a title for the routine."])
             return
         }
 
-        guard !routine.tasks.isEmpty else {
-            alertMessage = "Please add at least one task to the routine."
-            showingAlert = true
-            return
-        }
+        let selectedTasks = routineManager.tasks.filter { selectedTaskIDs.contains($0.id!) }
 
         do {
-            try routineManager.dataManager.saveFixedRoutine(fixedRoutine: routine)
-            if let index = routineManager.fixedRoutines.firstIndex(where: { $0.id == routine.id }) {
-                routineManager.fixedRoutines[index] = routine
-            }
+            try routineManager.dataManager.updateFixedRoutine(routine, title: routineTitle, description: routine.routineDescription, startTime: routine.startTime, flexibility: routine.flexibility?.doubleValue, recurrence: FixedRoutine.Recurrence(rawValue: routine.recurrence ?? "") ?? .daily, tasks: selectedTasks)
             presentationMode.wrappedValue.dismiss()
+            isPresented = false
         } catch {
-            alertMessage = "Error saving fixed routine: \(error.localizedDescription)"
-            showingAlert = true
+            routineManager.dataManager.error = error
         }
     }
 }

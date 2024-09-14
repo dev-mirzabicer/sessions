@@ -29,6 +29,16 @@
 		F33655FF2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar in Frameworks */ = {isa = PBXBuildFile; productRef = F33655FE2C94366400C9FE04 /* GoogleAPIClientForREST_Calendar */; };
 		F3907C862C9571E700AF904E /* BackgroundTaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907C852C9571E700AF904E /* BackgroundTaskService.swift */; };
 		F3907C982C957D0400AF904E /* SessionsModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F3907C962C957D0400AF904E /* SessionsModel.xcdatamodeld */; };
+		F3907CAB2C958B8A00AF904E /* TaskEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CA52C958B8A00AF904E /* TaskEntity+CoreDataClass.swift */; };
+		F3907CAC2C958B8A00AF904E /* TaskEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CA62C958B8A00AF904E /* TaskEntity+CoreDataProperties.swift */; };
+		F3907CAD2C958B8A00AF904E /* FixedRoutineEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CA72C958B8A00AF904E /* FixedRoutineEntity+CoreDataClass.swift */; };
+		F3907CAE2C958B8A00AF904E /* FixedRoutineEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CA82C958B8A00AF904E /* FixedRoutineEntity+CoreDataProperties.swift */; };
+		F3907CAF2C958B8A00AF904E /* HabitEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CA92C958B8A00AF904E /* HabitEntity+CoreDataClass.swift */; };
+		F3907CB02C958B8A00AF904E /* HabitEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CAA2C958B8A00AF904E /* HabitEntity+CoreDataProperties.swift */; };
+		F3907CB22C9596AA00AF904E /* FixedRoutineEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CB12C9596AA00AF904E /* FixedRoutineEntity+Extensions.swift */; };
+		F3907CB42C9596D600AF904E /* TaskEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CB32C9596D600AF904E /* TaskEntity+Extensions.swift */; };
+		F3907CB62C9599BD00AF904E /* HabitEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CB52C9599BD00AF904E /* HabitEntity+Extensions.swift */; };
+		F3907CB82C959E8500AF904E /* AnyScheduleable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3907CB72C959E8500AF904E /* AnyScheduleable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +82,16 @@
 		F30748192C94302A00C8B97C /* FixedRoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedRoutinesView.swift; sourceTree = "<group>"; };
 		F3907C852C9571E700AF904E /* BackgroundTaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskService.swift; sourceTree = "<group>"; };
 		F3907C972C957D0400AF904E /* SessionsModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SessionsModel.xcdatamodel; sourceTree = "<group>"; };
+		F3907CA52C958B8A00AF904E /* TaskEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		F3907CA62C958B8A00AF904E /* TaskEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		F3907CA72C958B8A00AF904E /* FixedRoutineEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FixedRoutineEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		F3907CA82C958B8A00AF904E /* FixedRoutineEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FixedRoutineEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		F3907CA92C958B8A00AF904E /* HabitEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HabitEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		F3907CAA2C958B8A00AF904E /* HabitEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HabitEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		F3907CB12C9596AA00AF904E /* FixedRoutineEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FixedRoutineEntity+Extensions.swift"; sourceTree = "<group>"; };
+		F3907CB32C9596D600AF904E /* TaskEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskEntity+Extensions.swift"; sourceTree = "<group>"; };
+		F3907CB52C9599BD00AF904E /* HabitEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HabitEntity+Extensions.swift"; sourceTree = "<group>"; };
+		F3907CB72C959E8500AF904E /* AnyScheduleable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyScheduleable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,7 +185,16 @@
 		F30747FE2C942F2000C8B97C /* DataModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3907CA52C958B8A00AF904E /* TaskEntity+CoreDataClass.swift */,
+				F3907CA62C958B8A00AF904E /* TaskEntity+CoreDataProperties.swift */,
+				F3907CA72C958B8A00AF904E /* FixedRoutineEntity+CoreDataClass.swift */,
+				F3907CA82C958B8A00AF904E /* FixedRoutineEntity+CoreDataProperties.swift */,
+				F3907CA92C958B8A00AF904E /* HabitEntity+CoreDataClass.swift */,
+				F3907CAA2C958B8A00AF904E /* HabitEntity+CoreDataProperties.swift */,
 				F30747FF2C942F3500C8B97C /* DataManager.swift */,
+				F3907CB12C9596AA00AF904E /* FixedRoutineEntity+Extensions.swift */,
+				F3907CB32C9596D600AF904E /* TaskEntity+Extensions.swift */,
+				F3907CB52C9599BD00AF904E /* HabitEntity+Extensions.swift */,
 			);
 			path = DataModel;
 			sourceTree = "<group>";
@@ -177,6 +206,7 @@
 				F30748042C942F5D00C8B97C /* Task.swift */,
 				F30748062C942F6600C8B97C /* Habit.swift */,
 				F30748082C942F7100C8B97C /* FixedRoutine.swift */,
+				F3907CB72C959E8500AF904E /* AnyScheduleable.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -344,15 +374,25 @@
 				F307480D2C942F8F00C8B97C /* RoutineManager.swift in Sources */,
 				F30747D92C942DA900C8B97C /* Persistence.swift in Sources */,
 				F30748092C942F7100C8B97C /* FixedRoutine.swift in Sources */,
+				F3907CB42C9596D600AF904E /* TaskEntity+Extensions.swift in Sources */,
 				F307481A2C94302A00C8B97C /* FixedRoutinesView.swift in Sources */,
 				F30748032C942F5200C8B97C /* Scheduleable.swift in Sources */,
 				F30748162C94300A00C8B97C /* TasksView.swift in Sources */,
 				F30748052C942F5D00C8B97C /* Task.swift in Sources */,
 				F3907C862C9571E700AF904E /* BackgroundTaskService.swift in Sources */,
 				F3907C982C957D0400AF904E /* SessionsModel.xcdatamodeld in Sources */,
+				F3907CB82C959E8500AF904E /* AnyScheduleable.swift in Sources */,
 				F30748132C942FFA00C8B97C /* RoutineView.swift in Sources */,
+				F3907CAB2C958B8A00AF904E /* TaskEntity+CoreDataClass.swift in Sources */,
+				F3907CAC2C958B8A00AF904E /* TaskEntity+CoreDataProperties.swift in Sources */,
+				F3907CB62C9599BD00AF904E /* HabitEntity+Extensions.swift in Sources */,
+				F3907CAD2C958B8A00AF904E /* FixedRoutineEntity+CoreDataClass.swift in Sources */,
+				F3907CAE2C958B8A00AF904E /* FixedRoutineEntity+CoreDataProperties.swift in Sources */,
+				F3907CAF2C958B8A00AF904E /* HabitEntity+CoreDataClass.swift in Sources */,
+				F3907CB02C958B8A00AF904E /* HabitEntity+CoreDataProperties.swift in Sources */,
 				F30748072C942F6600C8B97C /* Habit.swift in Sources */,
 				F30748182C94301D00C8B97C /* HabitsView.swift in Sources */,
+				F3907CB22C9596AA00AF904E /* FixedRoutineEntity+Extensions.swift in Sources */,
 				F30747D02C942DA600C8B97C /* sessionsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

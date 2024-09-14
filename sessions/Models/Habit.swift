@@ -1,6 +1,6 @@
 import Foundation
 
-class Habit: Scheduleable, Codable {
+class Habit: NotificationScheduleable, Codable {
     var id: UUID
     var title: String
     var description: String?
@@ -42,14 +42,6 @@ class Habit: Scheduleable, Codable {
         self.tags = tags
         self.project = project
         self.frequency = frequency
-    }
-
-    func schedule(date: Date, time: Date) throws {
-        try super.schedule(date: date, time: time)
-    }
-
-    func reschedule(date: Date, time: Date) throws {
-        try super.reschedule(date: date, time: time)
     }
 
     func markAsComplete(on date: Date) {

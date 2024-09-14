@@ -1,25 +1,28 @@
 import Foundation
-import GoogleAPIClientForRESTCore
-import GoogleAPIClientForREST_Calendar
+import GoogleAPIClientForREST
+import GoogleSignIn
 
+// RoutineManagerDelegate protocol (unchanged)
 protocol RoutineManagerDelegate: AnyObject {
     func routineManager(_ routineManager: RoutineManager, didFetchGoogleCalendarEvents events: [GTLRCalendar_Event])
 }
 
 class RoutineManager: ObservableObject {
     @Published var currentRoutine: Routine?
-    @Published var scheduledItems: [Scheduleable] = []
+    @Published var scheduledItems: [AnyScheduleable] = []
     @Published var googleCalendarEvents: [GTLRCalendar_Event] = []
-    @Published var fixedRoutines: [FixedRoutine] = []
-    @Published var tasks: [Task] = []
-    @Published var habits: [Habit] = []
+    @Published var fixedRoutines: [FixedRoutineEntity] = []
+    @Published var tasks: [TaskEntity] = []
+    @Published var habits: [HabitEntity] = []
 
     private let dataManager: DataManager
     private let calendarService: GTLRCalendarService
+    weak var delegate: RoutineManagerDelegate? // Add delegate property
 
     enum RoutineManagerError: Error {
         case schedulingConflict(Scheduleable)
         case googleCalendarError(Error)
+        case googleSignInError(Error)
     }
 
     static let shared = RoutineManager(dataManager: DataManager(), calendarService: GTLRCalendarService())
@@ -32,26 +35,27 @@ class RoutineManager: ObservableObject {
         loadHabits()
     }
 
+    // MARK: - Routine Management
+
     func loadRoutine(for date: Date) {
-        scheduledItems = dataManager.loadScheduleables().filter { scheduleable in
-            guard let scheduledDate = scheduleable.scheduledDate else { return false }
-            return Calendar.current.isDate(scheduledDate, inSameDayAs: date)
+        do {
+            let scheduleables = try dataManager.loadScheduleables()
+            scheduledItems = scheduleables.filter { scheduleable in
+                guard let scheduledDate = scheduleable.scheduledDate else { return false }
+                return Calendar.current.isDate(scheduledDate, inSameDayAs: date)
+            }.map { AnyScheduleable($0) } // Wrap in AnyScheduleable
+
+            currentRoutine = Routine(date: date, scheduledItems: scheduledItems)
+        } catch {
+            dataManager.error = IdentifiableError(error: error)
         }
-
-        fetchGoogleCalendarEvents(for: date)
-
-        currentRoutine = Routine(date: date, scheduledItems: scheduledItems)
     }
 
     func saveRoutine() {
-        guard let currentRoutine = currentRoutine else { return }
-
-        for item in currentRoutine.scheduledItems {
-            do {
-                try dataManager.saveScheduleable(scheduleable: item)
-            } catch {
-                print("Error saving scheduleable item: \(error)")
-            }
+        do {
+            try dataManager.saveContext()
+        } catch {
+            dataManager.error = IdentifiableError(error: error)
         }
     }
 
@@ -62,18 +66,15 @@ class RoutineManager: ObservableObject {
 
         do {
             try item.schedule(date: date, time: time)
-        } catch {
-            print("Error scheduling item: \(error)")
-        }
 
-        if let currentRoutine = currentRoutine, currentRoutine.date == date {
-            currentRoutine.scheduledItems.append(item)
-        }
+            if let currentRoutine = currentRoutine, currentRoutine.date == date {
+                currentRoutine.scheduledItems.append(AnyScheduleable(item)) // Wrap in AnyScheduleable
+            }
 
-        do {
             try dataManager.saveScheduleable(scheduleable: item)
         } catch {
-            print("Error saving scheduleable item: \(error)")
+            dataManager.error = IdentifiableError(error: error)
+            throw error
         }
     }
 
@@ -84,37 +85,63 @@ class RoutineManager: ObservableObject {
 
         do {
             try item.reschedule(date: date, time: time)
-        } catch {
-            print("Error rescheduling item: \(error)")
-        }
 
-        if let currentRoutine = currentRoutine, currentRoutine.date == date {
-            currentRoutine.scheduledItems.append(item)
-        }
+            if let currentRoutine = currentRoutine, currentRoutine.date == date {
+                currentRoutine.scheduledItems.append(AnyScheduleable(item)) // Wrap in AnyScheduleable
+            }
 
-        do {
             try dataManager.saveScheduleable(scheduleable: item)
         } catch {
-            print("Error saving scheduleable item: \(error)")
-        }
-    }
-
-    func syncWithGoogleCalendar() {
-        if let currentRoutine = currentRoutine {
-            fetchGoogleCalendarEvents(for: currentRoutine.date)
+            dataManager.error = IdentifiableError(error: error)
+            throw error
         }
     }
 
     // MARK: - Google Calendar Integration
 
+    func syncWithGoogleCalendar() {
+        guard GIDSignIn.sharedInstance.hasPreviousSignIn() else {
+            // User is not signed in, initiate Google Sign-In
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootViewController = windowScene.windows.first?.rootViewController {
+                GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
+                    if let error = error {
+                        self.dataManager.error = IdentifiableError(error: RoutineManagerError.googleSignInError(error))
+                        return
+                    }
+
+                    guard let signInResult = signInResult else { return }
+
+                    // User is signed in, fetch Google Calendar events
+                    self.fetchGoogleCalendarEvents()
+                }
+            }
+            return
+        }
+
+        // User is already signed in, fetch Google Calendar events
+        fetchGoogleCalendarEvents()
+    }
+
+    private func fetchGoogleCalendarEvents() {
+        if let currentRoutine = currentRoutine {
+            fetchGoogleCalendarEvents(for: currentRoutine.date)
+        }
+    }
+
     private func fetchGoogleCalendarEvents(for date: Date) {
+        guard let user = GIDSignIn.sharedInstance.currentUser else { return }
+
+        let calendarService = GTLRCalendarService()
+        calendarService.authorizer = user.authentication.fetcherAuthorizer()
+
         let query = GTLRCalendarQuery_EventsList.query(withCalendarId: "primary")
         query.timeMin = GTLRDateTime(date: Calendar.current.startOfDay(for: date))
         query.timeMax = GTLRDateTime(date: Calendar.current.date(byAdding: .day, value: 1, to: date)!)
 
         calendarService.executeQuery(query) { (ticket, result, error) in
             if let error = error {
-                print("Error fetching Google Calendar events: \(error)")
+                self.dataManager.error = RoutineManagerError.googleCalendarError(error)
                 return
             }
 
@@ -169,28 +196,35 @@ class RoutineManager: ObservableObject {
         return nil
     }
 
-    func getRoutineItems(for date: Date) -> [Scheduleable] {
-        var allItems: [Scheduleable] = []
+    // MARK: - Data Loading
 
-        allItems.append(contentsOf: dataManager.loadScheduleables().filter { scheduleable in
-            guard let scheduledDate = scheduleable.scheduledDate else { return false }
-            return Calendar.current.isDate(scheduledDate, inSameDayAs: date)
-        })
+    func getRoutineItems(for date: Date) -> [AnyScheduleable] { // Return [AnyScheduleable]
+        var allItems: [AnyScheduleable] = []
+
+        do {
+            let scheduleables = try dataManager.loadScheduleables()
+            allItems.append(contentsOf: scheduleables.filter { scheduleable in
+                guard let scheduledDate = scheduleable.scheduledDate else { return false }
+                return Calendar.current.isDate(scheduledDate, inSameDayAs: date)
+            }.map { AnyScheduleable($0) }) // Wrap in AnyScheduleable
+        } catch {
+            dataManager.error = IdentifiableError(error: error)
+        }
 
         for routine in fixedRoutines {
-            if routine.shouldOccur(on: date) {
-                allItems.append(contentsOf: routine.tasks)
+            if routine.toFixedRoutine().shouldOccur(on: date) {
+                allItems.append(contentsOf: (routine.tasks?.allObjects as? [TaskEntity] ?? []).map { AnyScheduleable($0.toTask()) }) // Wrap in AnyScheduleable
             }
         }
 
         fetchGoogleCalendarEvents(for: date)
         allItems.append(contentsOf: googleCalendarEvents.map { event in
-            return Task(title: event.summary ?? "Google Calendar Event",
-                        description: event.descriptionProperty,
-                        isScheduled: true,
-                        scheduledDate: event.start?.dateTime?.date,
-                        scheduledTime: event.start?.dateTime?.date,
-                        duration: event.end?.dateTime?.date?.timeIntervalSince(event.start?.dateTime?.date ?? Date()))
+            return AnyScheduleable(Task(title: event.summary ?? "Google Calendar Event",
+                                        description: event.descriptionProperty,
+                                        isScheduled: true,
+                                        scheduledDate: event.start?.dateTime?.date,
+                                        scheduledTime: event.start?.dateTime?.date,
+                                        duration: event.end?.dateTime?.date?.timeIntervalSince(event.start?.dateTime?.date ?? Date()))) // Wrap in AnyScheduleable
         })
 
         return allItems
@@ -199,22 +233,32 @@ class RoutineManager: ObservableObject {
     // MARK: - Fixed Routines
 
     private func loadFixedRoutines() {
-        fixedRoutines = dataManager.loadAllFixedRoutines()
+        do {
+            fixedRoutines = try dataManager.fetchFixedRoutines()
+        } catch {
+            dataManager.error = error
+        }
     }
 
     // MARK: - Tasks
 
     func loadTasks() {
-        tasks = dataManager.loadTasks()
+        do {
+            tasks = try dataManager.fetchTasks()
+        } catch {
+            dataManager.error = error
+        }
     }
 
     // MARK: - Habits
 
     func loadHabits() {
-        habits = dataManager.loadHabits()
+        do {
+            habits = try dataManager.fetchHabits()
+        } catch {
+            dataManager.error = error
+        }
     }
-
-    weak var delegate: RoutineManagerDelegate?
 }
 
 struct Routine {

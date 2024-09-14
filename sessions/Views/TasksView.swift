@@ -3,17 +3,15 @@ import SwiftUI
 struct TasksView: View {
     @ObservedObject var routineManager = RoutineManager.shared
     @State private var isAddingTask = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
             VStack {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 20) {
-                        KanbanColumn(title: "Not Started", tasks: routineManager.tasks.filter { $0.status == .notStarted }, color: .gray)
-                        KanbanColumn(title: "In Progress", tasks: routineManager.tasks.filter { $0.status == .inProgress }, color: .blue)
-                        KanbanColumn(title: "Done", tasks: routineManager.tasks.filter { $0.status == .done }, color: .green)
+                        KanbanColumn(title: "Not Started", tasks: $routineManager.tasks, status: "Not Started", color: .gray)
+                        KanbanColumn(title: "In Progress", tasks: $routineManager.tasks, status: "In Progress", color: .blue)
+                        KanbanColumn(title: "Done", tasks: $routineManager.tasks, status: "Done", color: .green)
                     }
                     .padding()
                 }
@@ -29,10 +27,10 @@ struct TasksView: View {
             }
             .navigationTitle("Tasks")
             .sheet(isPresented: $isAddingTask) {
-                AddTaskView(isPresented: $isAddingTask, tasks: $routineManager.tasks)
+                AddTaskView(isPresented: $isAddingTask)
             }
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            .alert(item: $routineManager.dataManager.error) { error in
+                Alert(title: Text("Error"), message: Text(error.error.localizedDescription), dismissButton: .default(Text("OK")))
             }
             .onAppear {
                 routineManager.loadTasks()
@@ -43,7 +41,8 @@ struct TasksView: View {
 
 struct KanbanColumn: View {
     var title: String
-    @ObservedObject var tasks: [Task] // Use @ObservedObject for dynamic updates
+    @Binding var tasks: [TaskEntity]
+    var status: String
     var color: Color
 
     var body: some View {
@@ -54,12 +53,14 @@ struct KanbanColumn: View {
                 .foregroundColor(.white)
                 .padding(.bottom)
 
-            ForEach(tasks) { task in
-                TaskCardView(task: task)
-                    .onDrag {
-                        return NSItemProvider(object: task.id as NSItemProviderWriting)
-                    }
-                    .onDrop(of: [.text], delegate: TaskDropDelegate(tasks: $tasks, columnTitle: title))
+            ForEach(tasks.indices, id: \.self) { index in
+                if tasks[index].status == status {
+                    TaskCardView(task: tasks[index])
+                        .onDrag {
+                            return NSItemProvider(object: tasks[index].id! as NSItemProviderWriting)
+                        }
+                        .onDrop(of: [.text], delegate: TaskDropDelegate(tasks: $tasks, columnTitle: title))
+                }
             }
         }
         .padding()
@@ -70,13 +71,13 @@ struct KanbanColumn: View {
 }
 
 struct TaskCardView: View {
-    var task: Task
+    @ObservedObject var task: TaskEntity
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(task.title)
+            Text(task.title ?? "")
                 .font(.headline)
-            if let description = task.description {
+            if let description = task.taskDescription {
                 Text(description)
                     .font(.subheadline)
             }
@@ -89,7 +90,7 @@ struct TaskCardView: View {
 }
 
 struct TaskDropDelegate: DropDelegate {
-    @Binding var tasks: [Task]
+    @Binding var tasks: [TaskEntity]
     let columnTitle: String
 
     func performDrop(info: DropInfo) -> Bool {
@@ -97,19 +98,22 @@ struct TaskDropDelegate: DropDelegate {
 
         item.loadObject(ofClass: UUID.self) { uuid, _ in
             if let taskID = uuid, let sourceIndex = tasks.firstIndex(where: { $0.id == taskID }) {
-                let draggedTask = tasks.remove(at: sourceIndex)
+                let draggedTask = tasks[sourceIndex]
 
+                // Update the task's status based on the target column
                 switch columnTitle {
                 case "Not Started":
-                    draggedTask.status = .notStarted
+                    draggedTask.status = "Not Started"
                 case "In Progress":
-                    draggedTask.status = .inProgress
+                    draggedTask.status = "In Progress"
                 case "Done":
-                    draggedTask.status = .done
+                    draggedTask.status = "Done"
                 default:
                     break
                 }
 
+                // Move the task to the end of the target column
+                tasks.remove(at: sourceIndex)
                 tasks.append(draggedTask)
             }
         }
@@ -121,7 +125,6 @@ struct TaskDropDelegate: DropDelegate {
 struct AddTaskView: View {
     @Environment(\.presentationMode) var presentationMode
     @Binding var isPresented: Bool
-    @Binding var tasks: [Task]
     @State private var taskTitle = ""
     @State private var taskDescription: String?
     @State private var taskDuration: TimeInterval = 0
@@ -149,13 +152,13 @@ struct AddTaskView: View {
             return
         }
 
-        let newTask = Task(title: taskTitle, description: taskDescription, duration: taskDuration)
-        tasks.append(newTask)
         do {
-            try routineManager.dataManager.saveTask(task: newTask)
+            try routineManager.dataManager.saveTask(title: taskTitle, description: taskDescription, isScheduled: false, scheduledDate: nil, scheduledTime: nil, duration: taskDuration, priority: 2, dueDate: nil, reminder: nil, tags: nil, project: nil, status: .notStarted)
+            routineManager.loadTasks() // Refresh the tasks array
         } catch {
-            print("Error saving task: \(error.localizedDescription)")
+            routineManager.dataManager.error = IdentifiableError(error: error)
         }
+
         presentationMode.wrappedValue.dismiss()
     }
 }

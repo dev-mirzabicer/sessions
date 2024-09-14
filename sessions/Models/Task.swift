@@ -39,13 +39,7 @@ class Task: Scheduleable, Codable {
         self.status = status
     }
 
-    func schedule(date: Date, time: Date) throws {
-        try super.schedule(date: date, time: time)
-    }
-
-    func reschedule(date: Date, time: Date) throws {
-        try super.reschedule(date: date, time: time)
-    }
+    // No need to implement schedule and reschedule as they have default implementations in the Scheduleable extension
 
     func markAsComplete() {
         status = .done

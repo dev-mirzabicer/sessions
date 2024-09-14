@@ -1,8 +1,8 @@
 import Foundation
 import UserNotifications
 
-protocol Scheduleable: Identifiable {
-    var id: UUID { get set }
+protocol Scheduleable: AnyObject, Identifiable {
+
     var title: String { get set }
     var description: String? { get set }
     var isScheduled: Bool { get set }
@@ -19,29 +19,33 @@ protocol Scheduleable: Identifiable {
     func schedule(date: Date, time: Date) throws
     func reschedule(date: Date, time: Date) throws
     func markAsComplete()
+}
+
+// Separate protocol for notification scheduling
+protocol NotificationScheduleable: Scheduleable {
     func scheduleNotification(with title: String, body: String, at date: Date)
 }
 
+// Default implementations for Scheduleable methods
 extension Scheduleable {
-    func schedule(date: Date, time: Date) throws {
-        self.isScheduled = true
+    func schedule(date: Date, time: Date) {
         self.scheduledDate = date
         self.scheduledTime = time
-
-        if let reminder = reminder {
-            scheduleNotification(with: title, body: "Reminder: \(title)", at: reminder)
-        }
+        self.isScheduled = true
     }
 
-    func reschedule(date: Date, time: Date) throws {
+    func reschedule(date: Date, time: Date) {
         self.scheduledDate = date
         self.scheduledTime = time
     }
 
     func markAsComplete() {
-        // Default implementation (can be overridden in subclasses)
+        // Default implementation can be empty or provide common functionality
     }
+}
 
+// Default implementation for NotificationScheduleable method
+extension NotificationScheduleable {
     func scheduleNotification(with title: String, body: String, at date: Date) {
         let content = UNMutableNotificationContent()
         content.title = title
